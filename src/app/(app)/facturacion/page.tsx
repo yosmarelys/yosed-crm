@@ -32,7 +32,7 @@ export default async function FacturacionPage({
   const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
 
   const where: any = {};
-  if (q) where.OR = [{ clientName: { contains: q } }, { clientPhone: { contains: q } }];
+  if (q) where.OR = [{ clientName: { contains: q, mode: "insensitive" } }, { clientPhone: { contains: q } }];
   if (status !== "ALL") where.status = status;
 
   const [invoices, total, sellers, services, sums] = await Promise.all([

@@ -23,7 +23,7 @@ export default async function ClientesPage({
   const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
 
   const where = q
-    ? { OR: [{ fullName: { contains: q } }, { phone: { contains: q } }] }
+    ? { OR: [{ fullName: { contains: q, mode: "insensitive" as const } }, { phone: { contains: q } }] }
     : {};
 
   const [clients, total] = await Promise.all([

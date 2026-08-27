@@ -6,21 +6,37 @@ CRM enfocado en ventas para una clínica estética (microblading, pestañas, Mor
 
 - **Next.js 14** (App Router) + TypeScript
 - **Tailwind CSS** para el sistema de diseño
-- **Prisma + SQLite** como base de datos (fácil de correr localmente, migrable a Postgres)
+- **Prisma + PostgreSQL** como base de datos (compatible con Vercel Postgres/Neon para despliegue)
 - **Server Actions** para mutaciones, **SWR** para datos en vivo (chat, notificaciones, reloj)
 - **@hello-pangea/dnd** para los tableros Kanban (Pipeline de ventas y Diseño)
 - **recharts** para las gráficas del panel
 
-## Primeros pasos
+## Primeros pasos (local)
+
+Necesitas una base de datos Postgres accesible (local, Docker o un free tier como Neon).
 
 ```bash
+cp .env.example .env   # y coloca tu DATABASE_URL de Postgres + un SESSION_SECRET
 npm install
-npm run db:push    # crea prisma/dev.db a partir del schema
-npm run db:seed     # importa y limpia los datos reales del Excel del negocio
+npm run db:push     # sincroniza el schema
+npm run db:seed      # importa y limpia los datos reales del Excel del negocio
 npm run dev
 ```
 
 Abre `http://localhost:3000/login`.
+
+## Desplegar en Vercel (para obtener un link público)
+
+1. En [vercel.com](https://vercel.com), inicia sesión con tu cuenta de GitHub.
+2. "Add New" → "Project" → importa el repo `yosmarelys/yosed-crm` y selecciona la rama `claude/crm-bitrix-interface-6w9mwb`.
+3. Antes de desplegar, ve a la pestaña **Storage** del proyecto → "Create Database" → elige **Postgres** → conéctala al proyecto (esto agrega automáticamente las variables de conexión).
+4. En **Settings → Environment Variables**, agrega:
+   - `DATABASE_URL` = el connection string de Postgres que te dio Vercel (usa el que dice recomendado para Prisma / con pooling).
+   - `SESSION_SECRET` = cualquier texto largo aleatorio.
+5. Dale a **Deploy**. El comando de build (`npm run build`) ya sincroniza el schema y vuelve a importar los datos limpios del negocio en cada despliegue, así que no hace falta ningún paso manual adicional.
+6. Cuando termine, Vercel te da una URL pública (`https://tu-proyecto.vercel.app`) — ahí puedes iniciar sesión con cualquiera de los usuarios de demostración.
+
+> Nota: cada vez que se vuelva a desplegar el proyecto (por ejemplo, tras un nuevo cambio), la base de datos se reimporta desde cero con los datos originales del negocio, para que la demo siempre arranque limpia.
 
 ### Usuarios de demostración
 

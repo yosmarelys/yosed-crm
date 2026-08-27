@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     prisma.client.findMany({
       where: {
         OR: [
-          { fullName: { contains: q } },
+          { fullName: { contains: q, mode: "insensitive" } },
           { phone: { contains: q } },
         ],
       },
@@ -23,8 +23,8 @@ export async function GET(req: NextRequest) {
     prisma.lead.findMany({
       where: {
         OR: [
-          { firstName: { contains: q } },
-          { lastName: { contains: q } },
+          { firstName: { contains: q, mode: "insensitive" } },
+          { lastName: { contains: q, mode: "insensitive" } },
           { phone: { contains: q } },
         ],
       },

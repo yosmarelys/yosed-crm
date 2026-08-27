@@ -17,7 +17,12 @@ export default async function LeadsPage({
   const agent = searchParams.agent ?? "";
 
   const where: any = {};
-  if (q) where.OR = [{ firstName: { contains: q } }, { lastName: { contains: q } }, { phone: { contains: q } }];
+  if (q)
+    where.OR = [
+      { firstName: { contains: q, mode: "insensitive" } },
+      { lastName: { contains: q, mode: "insensitive" } },
+      { phone: { contains: q } },
+    ];
   if (source) where.source = source;
   if (agent === "unassigned") where.agentId = null;
   else if (agent) where.agentId = agent;
