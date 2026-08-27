@@ -1,0 +1,217 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// Role: ADMIN | VENTAS | DISENO | CAMPANAS
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String
+  color        String   @default("#3366ff")
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  invoicesSold      Invoice[]       @relation("SoldBy")
+  leadsAssigned     Lead[]          @relation("AssignedAgent")
+  timeEntries       TimeEntry[]
+  chatMemberships   ChannelMember[]
+  chatMessages      ChatMessage[]
+  notifications     Notification[]
+  designTasksOwned  DesignTask[]    @relation("DesignAssignee")
+  designTasksAsked  DesignTask[]    @relation("DesignRequester")
+  campaignsOwned    Campaign[]      @relation("CampaignOwner")
+}
+
+model Client {
+  id              String    @id @default(cuid())
+  fullName        String
+  firstName       String?
+  lastName        String?
+  phone           String?
+  notes           String?
+  firstVisit      DateTime?
+  lastVisit       DateTime?
+  totalInvoiced   Float     @default(0)
+  totalCommission Float     @default(0)
+  createdAt       DateTime  @default(now())
+
+  invoices Invoice[]
+  leads    Lead[]
+
+  @@index([phone])
+  @@index([fullName])
+}
+
+model ServiceCatalog {
+  id       String  @id @default(cuid())
+  name     String
+  category String  @default("General")
+  price    Float
+  active   Boolean @default(true)
+
+  invoices Invoice[]
+}
+
+/// status: PAID | PENDING | OVERDUE
+model Invoice {
+  id          String          @id @default(cuid())
+  date        DateTime
+  clientId    String?
+  client      Client?         @relation(fields: [clientId], references: [id])
+  clientName  String
+  clientPhone String?
+  serviceId   String?
+  service     ServiceCatalog? @relation(fields: [serviceId], references: [id])
+  serviceName String
+  price       Float
+  commission  Float
+  sellerId    String?
+  seller      User?           @relation("SoldBy", fields: [sellerId], references: [id])
+  sellerName  String?
+  paymentDate DateTime?
+  status      String          @default("PENDING")
+  createdAt   DateTime        @default(now())
+
+  @@index([date])
+  @@index([status])
+}
+
+/// stage: NUEVO | CONTACTADO | INTERESADO | AGENDADO | GANADO | PERDIDO
+model Lead {
+  id              String    @id @default(cuid())
+  date            DateTime
+  source          String?
+  gender          String?
+  channel         String?
+  firstName       String?
+  lastName        String?
+  phone           String?
+  status          String?
+  stage           String    @default("NUEVO")
+  agentId         String?
+  agent           User?     @relation("AssignedAgent", fields: [agentId], references: [id])
+  appointmentDate DateTime?
+  appointmentTime String?
+  attendance      String?
+  clientId        String?
+  client          Client?   @relation(fields: [clientId], references: [id])
+  campaignId      String?
+  campaign        Campaign? @relation(fields: [campaignId], references: [id])
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([stage])
+  @@index([date])
+}
+
+/// status: PLANEADA | ACTIVA | PAUSADA | FINALIZADA
+model Campaign {
+  id        String       @id @default(cuid())
+  name      String
+  platform  String
+  status    String       @default("ACTIVA")
+  budget    Float        @default(0)
+  spent     Float        @default(0)
+  startDate DateTime?
+  endDate   DateTime?
+  notes     String?
+  ownerId   String?
+  owner     User?        @relation("CampaignOwner", fields: [ownerId], references: [id])
+  createdAt DateTime     @default(now())
+
+  leads       Lead[]
+  designTasks DesignTask[]
+}
+
+/// status: SOLICITADO | EN_DISENO | REVISION | APROBADO | ENTREGADO
+/// priority: BAJA | MEDIA | ALTA | URGENTE
+model DesignTask {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  status      String    @default("SOLICITADO")
+  priority    String    @default("MEDIA")
+  dueDate     DateTime?
+  campaignId  String?
+  campaign    Campaign? @relation(fields: [campaignId], references: [id])
+  assigneeId  String?
+  assignee    User?     @relation("DesignAssignee", fields: [assigneeId], references: [id])
+  requesterId String?
+  requester   User?     @relation("DesignRequester", fields: [requesterId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model TimeEntry {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  clockIn   DateTime
+  clockOut  DateTime?
+  date      String
+  createdAt DateTime  @default(now())
+
+  @@index([userId, date])
+}
+
+model ChatChannel {
+  id        String          @id @default(cuid())
+  name      String
+  isDirect  Boolean         @default(false)
+  createdAt DateTime        @default(now())
+  members   ChannelMember[]
+  messages  ChatMessage[]
+}
+
+model ChannelMember {
+  id        String      @id @default(cuid())
+  channelId String
+  channel   ChatChannel @relation(fields: [channelId], references: [id])
+  userId    String
+  user      User        @relation(fields: [userId], references: [id])
+
+  @@unique([channelId, userId])
+}
+
+model ChatMessage {
+  id        String      @id @default(cuid())
+  channelId String
+  channel   ChatChannel @relation(fields: [channelId], references: [id])
+  senderId  String
+  sender    User        @relation(fields: [senderId], references: [id])
+  body      String
+  createdAt DateTime    @default(now())
+
+  @@index([channelId, createdAt])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  title     String
+  body      String?
+  link      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
+}
+
+model AutomationRule {
+  id          String    @id @default(cuid())
+  name        String
+  description String
+  trigger     String
+  action      String
+  enabled     Boolean   @default(true)
+  lastRunAt   DateTime?
+  createdAt   DateTime  @default(now())
+}
