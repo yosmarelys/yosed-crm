@@ -79,12 +79,14 @@ export function DesignTaskDrawer({
   function handleGenerateSummary() {
     setSummaryError(null);
     startSummary(async () => {
-      try {
-        const summary = await generateChatSummaryAction(task.id, chatNotes);
-        setChatSummary(summary);
-        onUpdated({ id: task.id, clientChatNotes: chatNotes, clientChatSummary: summary });
-      } catch (e: any) {
-        setSummaryError(e?.message || "No se pudo generar el resumen.");
+      const { result, error } = await generateChatSummaryAction(task.id, chatNotes);
+      if (error) {
+        setSummaryError(error);
+        return;
+      }
+      if (result) {
+        setChatSummary(result);
+        onUpdated({ id: task.id, clientChatNotes: chatNotes, clientChatSummary: result });
       }
     });
   }
@@ -92,16 +94,18 @@ export function DesignTaskDrawer({
   function handleGenerateAnalysis() {
     setAnalysisError(null);
     startAnalysis(async () => {
-      try {
-        const analysis = await generateAiAnalysisAction(task.id, {
-          chatSummary,
-          sellerOpinion,
-          clientOpinion,
-        });
-        setAiAnalysis(analysis);
-        onUpdated({ id: task.id, sellerOpinion, clientOpinion, aiAnalysis: analysis });
-      } catch (e: any) {
-        setAnalysisError(e?.message || "No se pudo generar el análisis.");
+      const { result, error } = await generateAiAnalysisAction(task.id, {
+        chatSummary,
+        sellerOpinion,
+        clientOpinion,
+      });
+      if (error) {
+        setAnalysisError(error);
+        return;
+      }
+      if (result) {
+        setAiAnalysis(result);
+        onUpdated({ id: task.id, sellerOpinion, clientOpinion, aiAnalysis: result });
       }
     });
   }

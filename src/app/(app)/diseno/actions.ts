@@ -85,15 +85,24 @@ export async function updateDesignTaskAction(
   return { ok: true };
 }
 
-export async function generateChatSummaryAction(id: string, notes: string) {
+export type GenerateResult = { result?: string; error?: string };
+
+export async function generateChatSummaryAction(id: string, notes: string): Promise<GenerateResult> {
   await requireSession();
-  const task = await prisma.designTask.findUnique({ where: { id } });
-  if (!task) throw new Error("No se encontró la tarjeta de diseño.");
+
   if (!notes.trim()) {
-    throw new Error("Primero escribe o pega las notas de conversación con el cliente.");
+    return { error: "Primero escribe o pega las notas de conversación con el cliente." };
   }
 
-  const summary = await summarizeClientChatNotes(notes);
+  const task = await prisma.designTask.findUnique({ where: { id } });
+  if (!task) return { error: "No se encontró la tarjeta de diseño." };
+
+  let summary: string;
+  try {
+    summary = await summarizeClientChatNotes(notes);
+  } catch (e: any) {
+    return { error: e?.message || "No se pudo generar el resumen." };
+  }
 
   await prisma.designTask.update({
     where: { id },
@@ -101,23 +110,28 @@ export async function generateChatSummaryAction(id: string, notes: string) {
   });
 
   revalidatePath("/diseno");
-  return summary;
+  return { result: summary };
 }
 
 export async function generateAiAnalysisAction(
   id: string,
   input: { chatSummary: string; sellerOpinion: string; clientOpinion: string }
-) {
+): Promise<GenerateResult> {
   await requireSession();
   const task = await prisma.designTask.findUnique({ where: { id } });
-  if (!task) throw new Error("No se encontró la tarjeta de diseño.");
+  if (!task) return { error: "No se encontró la tarjeta de diseño." };
 
-  const analysis = await generateDesignAiAnalysis({
-    taskTitle: task.title,
-    chatSummary: input.chatSummary || null,
-    sellerOpinion: input.sellerOpinion || null,
-    clientOpinion: input.clientOpinion || null,
-  });
+  let analysis: string;
+  try {
+    analysis = await generateDesignAiAnalysis({
+      taskTitle: task.title,
+      chatSummary: input.chatSummary || null,
+      sellerOpinion: input.sellerOpinion || null,
+      clientOpinion: input.clientOpinion || null,
+    });
+  } catch (e: any) {
+    return { error: e?.message || "No se pudo generar el análisis." };
+  }
 
   await prisma.designTask.update({
     where: { id },
@@ -130,5 +144,5 @@ export async function generateAiAnalysisAction(
   });
 
   revalidatePath("/diseno");
-  return analysis;
+  return { result: analysis };
 }
