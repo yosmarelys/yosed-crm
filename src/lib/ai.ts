@@ -1,32 +1,33 @@
 import "server-only";
-import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenAI } from "@google/genai";
 
-const MODEL = "claude-opus-5";
+const MODEL = "gemini-2.5-flash";
 
 function getClient() {
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!process.env.GEMINI_API_KEY) {
     throw new Error(
-      "Falta configurar ANTHROPIC_API_KEY en las variables de entorno para usar las funciones de IA."
+      "Falta configurar GEMINI_API_KEY en las variables de entorno para usar las funciones de IA."
     );
   }
-  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  return new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 }
 
-async function askClaude(system: string, userMessage: string): Promise<string> {
+async function askGemini(systemInstruction: string, userMessage: string): Promise<string> {
   const client = getClient();
-  const response = await client.messages.create({
+  const response = await client.models.generateContent({
     model: MODEL,
-    max_tokens: 1024,
-    output_config: { effort: "medium" },
-    system,
-    messages: [{ role: "user", content: userMessage }],
+    contents: userMessage,
+    config: {
+      systemInstruction,
+      maxOutputTokens: 1024,
+    },
   });
 
-  const text = response.content.find((b) => b.type === "text");
-  if (!text || text.type !== "text") {
+  const text = response.text;
+  if (!text) {
     throw new Error("La IA no devolvió una respuesta de texto válida.");
   }
-  return text.text.trim();
+  return text.trim();
 }
 
 export async function summarizeClientChatNotes(rawNotes: string): Promise<string> {
@@ -38,7 +39,7 @@ export async function summarizeClientChatNotes(rawNotes: string): Promise<string
     "(estilo, colores, referencias, quejas o preferencias sobre artes/diseños anteriores, etc). " +
     "Sé concreto y evita relleno. Si las notas no traen nada útil para diseño, dilo brevemente.";
 
-  return askClaude(system, rawNotes);
+  return askGemini(system, rawNotes);
 }
 
 export async function generateDesignAiAnalysis(input: {
@@ -63,5 +64,5 @@ export async function generateDesignAiAnalysis(input: {
     `Lo que el cliente pidió: ${input.clientOpinion || "(sin información)"}`,
   ];
 
-  return askClaude(system, parts.join("\n\n"));
+  return askGemini(system, parts.join("\n\n"));
 }
