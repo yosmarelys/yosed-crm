@@ -147,6 +147,18 @@ model DesignTask {
   requester   User?     @relation("DesignRequester", fields: [requesterId], references: [id])
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  // Notas crudas de conversaciones con el cliente (pegadas a mano por el vendedor).
+  // Es la materia prima que la IA resume en clientChatSummary.
+  clientChatNotes    String?
+  clientChatSummary  String?
+  clientChatUpdatedAt DateTime?
+
+  sellerOpinion String?
+  clientOpinion String?
+
+  aiAnalysis          String?
+  aiAnalysisUpdatedAt DateTime?
 }
 
 model TimeEntry {

@@ -14,7 +14,10 @@ export default async function DisenoPage() {
       },
     }),
     prisma.campaign.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
-    prisma.user.findMany({ where: { role: { in: ["DISENO", "ADMIN"] } }, select: { id: true, name: true } }),
+    prisma.user.findMany({
+      where: { role: { in: ["DISENO", "ADMIN"] } },
+      select: { id: true, name: true, color: true },
+    }),
   ]);
 
   const columns = {} as Record<DesignStatus, DesignCardData[]>;
@@ -30,6 +33,11 @@ export default async function DisenoPage() {
       dueDate: t.dueDate ? t.dueDate.toISOString() : null,
       campaign: t.campaign,
       assignee: t.assignee,
+      clientChatNotes: t.clientChatNotes,
+      clientChatSummary: t.clientChatSummary,
+      sellerOpinion: t.sellerOpinion,
+      clientOpinion: t.clientOpinion,
+      aiAnalysis: t.aiAnalysis,
     });
   }
 
@@ -40,7 +48,7 @@ export default async function DisenoPage() {
         subtitle="Solicitudes creativas para campañas y contenido"
         action={<NewDesignTaskDrawer campaigns={campaigns} designers={designers} />}
       />
-      <DesignBoard columns={columns} />
+      <DesignBoard columns={columns} campaigns={campaigns} designers={designers} />
     </div>
   );
 }

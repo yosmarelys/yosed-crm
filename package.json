@@ -12,6 +12,7 @@
     "db:reset": "prisma db push --force-reset && tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.122.0",
     "@hello-pangea/dnd": "^17.0.0",
     "@prisma/client": "^5.22.0",
     "bcryptjs": "^2.4.3",

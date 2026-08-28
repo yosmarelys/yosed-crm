@@ -33,6 +33,7 @@ Abre `http://localhost:3000/login`.
 4. En **Settings → Environment Variables**, agrega:
    - `DATABASE_URL` = el connection string de Postgres que te dio Vercel (usa el que dice recomendado para Prisma / con pooling).
    - `SESSION_SECRET` = cualquier texto largo aleatorio.
+   - `ANTHROPIC_API_KEY` = tu API key de Claude (console.anthropic.com), necesaria para las funciones de IA de la sección Diseño (resumen de conversaciones y análisis final). Si no la agregas, el resto del CRM funciona igual, esos dos botones solo mostrarán un aviso.
 5. Dale a **Deploy**. El comando de build (`npm run build`) ya sincroniza el schema y vuelve a importar los datos limpios del negocio en cada despliegue, así que no hace falta ningún paso manual adicional.
 6. Cuando termine, Vercel te da una URL pública (`https://tu-proyecto.vercel.app`) — ahí puedes iniciar sesión con cualquiera de los usuarios de demostración.
 
@@ -59,7 +60,7 @@ Todos con contraseña `yosed2024`:
 - **Servicios**: catálogo de precios editable en línea.
 - **Asistencia**: contador de entrada/salida en la barra superior (como el de Bitrix) + tabla de horas de los últimos 14 días.
 - **Chat interno**: canales de equipo con mensajes en vivo (polling).
-- **Diseño**: tablero Kanban de solicitudes creativas para el equipo de diseño.
+- **Diseño**: tablero Kanban de solicitudes creativas para el equipo de diseño. Cada tarjeta tiene resumen de conversaciones con el cliente (IA), opinión del vendedor, opinión del cliente y un análisis final combinado (IA, vía Claude) — clic en una tarjeta para editarla.
 - **Campañas**: gestión de campañas publicitarias, presupuesto, gasto y costo por lead, conectado a la fuente de los leads.
 - **Automatización**: reglas activas (facturas vencidas, seguimiento de citas, bienvenida a clientes nuevos) con ejecución manual o vía notificación automática.
 
